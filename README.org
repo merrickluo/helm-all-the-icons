@@ -1,16 +1,16 @@
-* Integration between helm and treemacs icons.
+* Integration between helm and all-the-icons.
 
-  [[file:images/treemacs-icons.gif]]
+  [[file:images/all-the-icons.png]]
 
 ** Configuration
 *** Melpa (TBD)
 *** Manual
-    Make sure that you have both =helm= and =treemacs= installed clone the repo
+    Make sure that you have both =helm= and =all-the-icons= installed clone the repo
     and put it on your path. Make sure that the enable call is performed before
     loading =helm=.
 
     #+BEGIN_SRC emacs-lisp
-    (helm-treemacs-icons-enable)
+    (helm-all-the-icons-enable)
     #+END_SRC
 ** Supported commands:
     - =helm-recentf=
