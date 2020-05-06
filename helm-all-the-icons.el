@@ -35,14 +35,37 @@
   "Helm all-the-icons."
   :group 'helm)
 
+(defcustom helm-all-the-icons-properties '(:height 0.8 :v-adjust -0.1)
+  "Override all-the-icons properties when display"
+  :group 'helm-all-the-icons
+  :type 'list)
+
+(defcustom helm-all-the-icons-separator "\t"
+  "Put a seprator between the icon and the text, defaults to \"\t\" for text align"
+  :group 'helm-all-the-icons
+  :type 'string)
+
+(defcustom helm-all-the-icons-prefix "\u2000"
+  "Put a prefix before the icon, defaults to a half width whitespace."
+  :group 'helm-all-the-icons
+  :type 'string)
+
+(defun helm-all-the-icons--get-icon (for param)
+  (let ((icon-func (intern (concat "all-the-icons-icon-for-" (symbol-name for)))))
+    (apply icon-func param helm-all-the-icons-properties)))
+
 (defun helm-all-the-icons-buffers-add-icon (candidates _source)
   "Add icon to buffers source.
 CANDIDATES is the list of candidates."
   (-map (-lambda ((display . buffer))
           (cons (concat
+                 helm-all-the-icons-prefix
                  (with-current-buffer buffer
-                   (all-the-icons-icon-for-buffer))
-                 "\u2009"
+                   (cond
+                    ((buffer-file-name) (helm-all-the-icons--get-icon 'file (buffer-file-name)))
+                    ((helm-all-the-icons--get-icon 'mode major-mode))
+                    ((helm-all-the-icons--get-icon 'file "unknown"))))
+                 helm-all-the-icons-separator
                  display)
                 buffer))
         candidates))
@@ -54,11 +77,14 @@ CANDIDATES is the list of candidates."
           (-let [(display . file-name) (if (listp candidate)
                                            candidate
                                          (cons candidate candidate))]
-            (cons (concat (cond
-                           ((f-dir? file-name) (all-the-icons-icon-for-dir file-name))
-                           ((all-the-icons-icon-for-file file-name)))
-                          "\u2009"
-                          display)
+            (cons (concat
+                 helm-all-the-icons-prefix
+                 (cond
+                  ((f-dir? file-name) (helm-all-the-icons--get-icon 'dir file-name))
+                  (file-name (helm-all-the-icons--get-icon 'file file-name))
+                  (helm-all-the-icons--get-icon 'file "unknown"))
+                 helm-all-the-icons-separator
+                 display)
                   file-name)))
         candidates))
 
