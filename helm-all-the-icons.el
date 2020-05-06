@@ -1,4 +1,4 @@
-;;; helm-treemacs-icons.el --- Helm integration with treemacs icons  -*- lexical-binding: t; -*-
+;;; helm-all-the-icons.el --- Helm integration with all-the-icons.el  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2020  Ivan Yonchovski
 
@@ -6,8 +6,8 @@
 ;; Keywords: convenience
 
 ;; Version: 0.1
-;; URL: https://github.com/yyoncho/helm-treemacs-icons
-;; Package-Requires: ((emacs "25.1") (dash "2.14.1") (f "0.20.0") (treemacs "2.7"))
+;; URL: https://github.com/merrickluo/helm-all-the-icons
+;; Package-Requires: ((emacs "25.1") (dash "2.14.1") (f "0.20.0") (all-the-icons "4.0.1"))
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -24,48 +24,30 @@
 
 ;;; Commentary:
 
-;; helm -> treemacs-icons integration
+;; helm -> all-the-icons.el integration
 
 ;;; Code:
 
-(require 'treemacs-themes)
-(require 'treemacs-icons)
+(require 'all-the-icons)
 (require 'dash)
 
-
-(defgroup helm-treemacs-icons nil
-  "Helm treemacs icons."
+(defgroup helm-all-the-icons nil
+  "Helm all-the-icons."
   :group 'helm)
 
-(defcustom helm-treemacs-icons-mode->icon
-  '((dired-mode . dir-closed)
-    (emacs-lisp-mode . "el")
-    (spacemacs-buffer-mode . "el"))
-  "Lookup Emacs mode -> `treemacs' icon key."
-  :type 'alist)
-
-(defun helm-treemacs-icons--get-icon (ext)
-  "Get icon for EXT."
-  (treemacs-get-icon-value ext nil (treemacs-theme->name (treemacs-current-theme))))
-
-(defun helm-treemacs-icons-buffers-add-icon (candidates _source)
+(defun helm-all-the-icons-buffers-add-icon (candidates _source)
   "Add icon to buffers source.
 CANDIDATES is the list of candidates."
   (-map (-lambda ((display . buffer))
           (cons (concat
                  (with-current-buffer buffer
-                   (or (->> (assoc major-mode helm-treemacs-icons-mode->icon)
-                            (cl-rest)
-                            helm-treemacs-icons--get-icon)
-                       (-some->> (buffer-file-name)
-                         f-ext
-                         helm-treemacs-icons--get-icon)
-                       (helm-treemacs-icons--get-icon 'fallback)))
+                   (all-the-icons-icon-for-buffer))
+                 "\u2009"
                  display)
                 buffer))
         candidates))
 
-(defun helm-treemacs-icons-files-add-icons (candidates _source)
+(defun helm-all-the-icons-files-add-icons (candidates _source)
   "Add icon to files source.
 CANDIDATES is the list of candidates."
   (-map (-lambda (candidate)
@@ -73,14 +55,14 @@ CANDIDATES is the list of candidates."
                                            candidate
                                          (cons candidate candidate))]
             (cons (concat (cond
-                           ((f-dir? file-name) (helm-treemacs-icons--get-icon 'dir-closed))
-                           ((helm-treemacs-icons--get-icon (f-ext file-name)))
-                           ((helm-treemacs-icons--get-icon 'fallback)))
+                           ((f-dir? file-name) (all-the-icons-icon-for-dir file-name))
+                           ((all-the-icons-icon-for-file file-name)))
+                          "\u2009"
                           display)
                   file-name)))
         candidates))
 
-(defun helm-treemacs-icons-add-transformer (fn source)
+(defun helm-all-the-icons-add-transformer (fn source)
   "Add FN to `filtered-candidate-transformer' slot of SOURCE."
   (setf (alist-get 'filtered-candidate-transformer source)
         (-uniq (append
@@ -88,7 +70,7 @@ CANDIDATES is the list of candidates."
                   (if (seqp value) value (list value)))
                 (list fn)))))
 
-(defun helm-treemacs-icons--make (orig name class &rest args)
+(defun helm-all-the-icons--make (orig name class &rest args)
   "The advice over `helm-make-source'.
 ORIG is the original function.
 NAME, CLASS and ARGS are the original params."
@@ -96,12 +78,12 @@ NAME, CLASS and ARGS are the original params."
     (cl-case class
       ((helm-recentf-source helm-source-ffiles helm-locate-source helm-fasd-source
                             )
-       (helm-treemacs-icons-add-transformer
-        #'helm-treemacs-icons-files-add-icons
+       (helm-all-the-icons-add-transformer
+        #'helm-all-the-icons-files-add-icons
         result))
       ((helm-source-buffers helm-source-projectile-buffer)
-       (helm-treemacs-icons-add-transformer
-        #'helm-treemacs-icons-buffers-add-icon
+       (helm-all-the-icons-add-transformer
+        #'helm-all-the-icons-buffers-add-icon
         result)))
     (cond
      ((or (-any? (lambda (source-name) (s-match source-name name))
@@ -112,16 +94,16 @@ NAME, CLASS and ARGS are the original params."
                    "Projectile files in current Dired buffer"
                    "dired-do-rename.*"
                    "Elisp libraries (Scan)")))
-      (helm-treemacs-icons-add-transformer
-       #'helm-treemacs-icons-files-add-icons
+      (helm-all-the-icons-add-transformer
+       #'helm-all-the-icons-files-add-icons
        result)))
     result))
 
 ;;;###autoload
-(defun helm-treemacs-icons-enable ()
-  "Enable `helm-treemacs-icons'."
+(defun helm-all-the-icons-enable ()
+  "Enable `helm-all-the-icons'."
   (interactive)
-  (advice-add 'helm-make-source :around #'helm-treemacs-icons--make))
+  (advice-add 'helm-make-source :around #'helm-all-the-icons--make))
 
-(provide 'helm-treemacs-icons)
-;;; helm-treemacs-icons.el ends here
+(provide 'helm-all-the-icons)
+;;; helm-all-the-icons.el ends here
